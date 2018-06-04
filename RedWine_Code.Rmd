@@ -1,0 +1,390 @@
+# MANJU GOYAL - Red Wine Quality
+The red wine quality data is a dataset by Cortez et al in which different physiochemical wine properties that can be tested in lab are provided along with quality rating from wine experts. Since the price of wine varies so much, it makes one wonder if there are certain properties which can be associated with higher quality and better still, if we can make a model that can help predict quality of wine based on some properties. In this analysis, my focus will be on understanding the relation between the physiochemical properties and quality. 
+
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Let us load all our packages here
+library(ggplot2)
+library(corrplot)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Load_the_Data}
+# Next, lets Load the Data
+dat = read.csv("wineQualityReds.csv", header = TRUE)
+```
+
+# Univariate Plots Section
+Let us first look at the structure of the dataset
+
+```{r echo=FALSE, Univariate_Plots}
+str(dat)
+```
+ 
+It turns out that the dataframe has 12 variables - fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, sulphates, free and total sulphur dioxide, density, pH, sulphates, alcohol and quality. Most of our analysis will be focussed on seeing how the first 11 of these variables impact the quality of the red wine. 
+
+Next, let us look at the data summary to see the distribution of the data 
+
+
+```{r echo=FALSE}
+summary(dat)
+```
+
+
+Overall it seems, some variables such as free sulfur dioxide, total sulfur dioxide, sulphates, alcohol, fixed acdity are a little skewed or have outliers.
+
+
+```{r echo=FALSE}
+range(dat$quality)
+```
+
+Let us look at the most important variable of interest - quality first.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+qplot(x=quality, data=dat, xlab='Quality', ylab='Frequency', 
+      fill = I("lightblue"), col=I("blue"), binwidth=1)
+```
+
+
+It seems most wines are of medium quality and there are only a few wines that have low or high quality. Also since quality is a numeric variable, let us make another variable of quality thats categorical. For this, I intend to make 3 categories - low, medium and high quality.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+attach(dat)
+dat$quality_cat[quality <=4] <- "Low"
+dat$quality_cat[quality > 4 & quality < 7] <- "Medium"
+dat$quality_cat[quality >= 7] <- "High"
+detach(dat)
+str(dat)
+```
+
+Now, lets look at the distribution of this new variable to understand how it looks 
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# first let us order the categrical variable
+dat$quality_cat <- factor(dat$quality_cat, c('Low','Medium','High'))
+qplot(x=quality_cat, data=dat, xlab='Quality', ylab='Frequency', 
+      fill = I("lightblue"), col=I("blue"))
+```
+``
+
+Clearly, we have much more data that is of medium quality wne as compared to that of low and high quality wine. 
+
+
+Next, let us look at histograms of all the other variables to understand their distribution as well. As I went about the analysis, I realised there were a lot of outliers that were skewing the data, so I tried to limit the data to have a better picture of how the distribution looks by setting xlim on the plots.
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=fixed.acidity, data=dat, xlab='Fixed Acidity', ylab='Frequency', 
+      xlim=c(4,14), fill = I("lightblue"), col=I("blue"), binwidth=0.5)
+```
+
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=volatile.acidity, data=dat, xlab='Volatile Acidity', ylab='Frequency',
+      xlim=c(0,1.2), fill = I("lightblue"), col=I("blue"),binwidth=0.075)
+
+```
+
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=citric.acid, data=dat, xlab='Citric Acid', ylab='Frequency', 
+      xlim=c(0,0.8), fill = I("lightblue"), col=I("blue"), binwidth=0.05)
+```
+
+This is a very box like distribution.
+
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=residual.sugar, data=dat, xlab='Residual Sugar', ylab='Frequency', 
+      xlim=c(1,5), fill = I("lightblue"), col=I("blue"), binwidth=0.2)
+```
+
+
+This distribution is also skewed to the right. 
+
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=chlorides, data=dat, xlab='Chlorides', ylab='Frequency', 
+      xlim=c(0,0.15), fill = I("lightblue"), col=I("blue"),binwidth=0.01)
+```
+
+
+
+Chlorides are more normally distributed 
+
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=free.sulfur.dioxide, data=dat, xlab='Free Sulphur Dioxide', 
+      ylab='Frequency', xlim=c(0,55), fill = I("lightblue"), col=I("blue"),
+      binwidth=3)
+```
+
+
+
+
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=total.sulfur.dioxide, data=dat, xlab='Total Sulphur Dioxide', 
+      ylab='Frequency', xlim=c(0,180), fill = I("lightblue"), 
+      col=I("blue"), binwidth=10)
+```
+
+Both free and total sulphur dioxide are skewed to the right.
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=density, data=dat, xlab='Density', ylab='Frequency', 
+      fill = I("lightblue"), col=I("blue"))
+```
+
+Interestingly density is more normally distributed,
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=pH, data=dat, xlab='pH', ylab='Frequency', 
+      fill = I("lightblue"), col=I("blue"), binwidth=0.05)
+```
+
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=sulphates, data=dat, xlab='Sulphates', ylab='Frequency', 
+      xlim=c(0.25,1.25), , fill = I("lightblue"), col=I("blue"))
+```
+
+
+
+
+```{r echo=FALSE,message=FALSE, warning=FALSE}
+qplot(x=alcohol, data=dat, xlab='Alcohol', ylab='Frequency', xlim=c(8,14),
+      fill = I("lightblue"), col=I("blue"))
+```
+
+
+
+# Univariate Analysis
+
+The data as 1600 points with 11 variables indicating that any of them could be impacting quality. Some variables have normal distribution such as density, pH, sulphates and many are skewed to the right. Interestingly, there are more wines of medium quality and less of low or high quality. I would be interested in seeing how each of the variables changes the quality and my next step will be first to see the correlation between these variables to get a high level understadign of how the variables are linked.
+
+
+# Bivariate Plots Section
+
+Let us look at the correlation matrix of the data and then plot using corrplot package
+
+```{r echo=FALSE, Bivariate_Plots}
+#correlation matrix is not needed for x and can only be doen for numeric values
+# hence lets subset the data
+tmpdata <- subset(dat, select = -c(X, quality_cat))
+res <- cor(tmpdata, method ="pearson")
+round(res, 2)
+`````
+
+
+
+
+```{r echo=FALSE}
+corrplot(res, type = "upper", order = "hclust", title='Correlation between 
+         Diff. Physiochemical Properties of Red Wine', mar=c(0,0,1,0))
+```
+
+Reminder: correlation <0.3 means very weak or no correlation, correlation r between 0.3 and 0.5 is weak relation, correlation between 0.5 and 0.7 means moderate correlation and greater than 0.7 means a strong correlation.
+
+Looking at the correlation plot is much easier to understand the plot than just reading the table. It helps us understand that there is a moderate negative correlation between pH and fixed acidity, pH and citric acid, volatile acidity and citric acid, alcohol and density . There is a moderate positive correlation between free and total sulphur dioxide, fixed acidity and citric acid, density and fixed acidity. weak positive correlation between chlorides and sulphates. The only variable that seems to have even a weak correlation with quality is alcohol(positive) and volatile acidity(negative).
+
+Next, lets try to plot quality against alcohol and volatile acidity and also against some other variables that seem to be important from this test such as sulphates, pH, fixed acidity and citric acid.
+
+
+```{r echo=FALSE}
+ggplot(dat, aes(y=alcohol, x=quality_cat)) +
+  geom_boxplot(color='black', alpha=1) + 
+  geom_jitter(alpha = 1/5, color='blue') 
+```
+
+
+
+This is a much clear picture.Quality and alcohol content are slightly positively correlated. Next let's look at quality and volatile acidity.
+
+
+
+```{r echo=FALSE, warning = FALSE,}
+ggplot(dat, aes(x=quality_cat, y=volatile.acidity)) + 
+  geom_boxplot(color='black', alpha=1) + 
+  geom_jitter(alpha = 1/5, color='blue')+ coord_cartesian(ylim = c(0.2, 1.2))
+```
+
+
+This relationship seems much stronger. Quality and volatile acidity seem to be very strongly negatively correlated
+
+
+
+```{r echo=FALSE, warning = FALSE,}
+ggplot(dat, aes(x=quality_cat, y=sulphates)) + 
+  geom_boxplot(color='black', alpha=1) + 
+  geom_jitter(alpha = 1/5, color='blue') + 
+  coord_cartesian(ylim = c(0.3, 1.1)) 
+```
+
+Sulphates seem to impact quality positively but then correlation coefficient was low. Also, the data is very less for low and high as compared to medium quality wines which might be skewing the results.
+
+```{r echo=FALSE, warning = FALSE,}
+ggplot(dat, aes(x=quality_cat, y=pH))+ 
+  geom_boxplot(color='black', alpha=1) + 
+  geom_jitter(alpha = 1/5, color='blue')+ 
+  coord_cartesian(ylim = c(2.75, 3.75)) 
+```
+
+Here, the relation of pH with quality is not clear. It does not seem to have any specific or strong trend both from this graph and also from the correlation coefficient
+
+```{r echo=FALSE, warning = FALSE,}
+ggplot(dat, aes(x=quality_cat, y=fixed.acidity)) + 
+  geom_boxplot(color='black', alpha=1) + 
+  geom_jitter(alpha = 1/5, color='blue')+ 
+  coord_cartesian(ylim = c(4,14))
+```
+
+
+```{r echo=FALSE, warning = FALSE,}
+#we usecoord_cartesian and not scale_x_continuous as the latter trims the points from calculations but we just want to trim our area of #vision
+ggplot(dat, aes(x=quality_cat, y=citric.acid)) + 
+  geom_boxplot(color='black', alpha=1) + 
+  geom_jitter(alpha = 1/5, color='blue') + 
+  coord_cartesian(ylim = c(0, 0.8))
+```
+
+Citric acid seems to be positively correlated with quality if we look at just the median value but the entire dataset doesnt give the same picture.
+
+So far, there seems to be some relationship between quality and volatile acidity(negative correlation), quality and alcohol content(positive correlation). Based on correlation values and this graph there definitely seems to be a relation between quality and citric acid, quality and sulphates though not a lot. Some plots do show some correlation when looked at just the median value but then the spread is so high and the correlation values are not big enough that they do suggest any strong correlations. Next, lets look at 2 or 3 factors together and their impact on quality if we can make out a trend.
+
+The correlation values had suggested a moderate negative correlation between pH and fixed acidity, pH and citric acid, volatile acidity and citric acid, alcohol and density . There is a moderate positive correlation between fixed acidity and citric acid, fixed acidity and density, Weak positive correlation between chlorides and sulphates. 
+
+Since volatile acidity and alcohol were important factors for quality(as seen in above charts), any factor that impacts these will be interesting to see it with quality. I will be interested to see a plot of alcohol and density with quality as a parameter, another would be volatile acidity and citric acid with quality. 
+I could also look at how any of these factors behave with sulphates as well. So, lets look at these bivariate relationships both individually and then with quality in multivariate section
+
+
+```{r echo=FALSE, warning = FALSE,}
+ggplot(dat, aes(x=volatile.acidity, y=alcohol, alpha=1/4)) + 
+  geom_point(color='blue')+ geom_smooth(method=lm)+ 
+  scale_alpha(guide='none')
+```
+
+
+
+```{r echo=FALSE, warning = FALSE}
+ggplot(dat, aes(x=density, y=alcohol, alpha=1/4)) + 
+  geom_point(color='blue')+ geom_smooth(method=lm)+ 
+  scale_alpha(guide='none')
+```
+
+
+```{r echo=FALSE, warning = FALSE}
+ggplot(dat, aes(x=volatile.acidity, y=citric.acid, alpha=1/4)) + 
+  geom_point(color='blue')+ geom_smooth(method=lm) + xlim(0,1)+ 
+  scale_alpha(guide='none')
+```
+
+
+
+
+# Bivariate Analysis
+
+
+Looking at the charts above, it seems quality is directly proportional to sulphates, alcohol content, pH, citric acid, and inversely proportional to volatile acidity. the factors that seem to have some impact but not a lot are chlorides .Fixed acidity, Free sulphur dioxide, total sulfur dioxide, do not seem to impact quality.
+
+Additionally a few factors such as volatile acidity and citric acid, alcohol and volatile acidity, alcohol and pH are inversely related
+
+# Multivariate Plots Section
+
+This section will be an extension to the multivariate analysis and focus on some of the important factors we found there and their relation to quality
+
+```{r echo=FALSE, warning = FALSE, Multivariate_Plots}
+ggplot(dat, aes(x=volatile.acidity, y=alcohol, alpha=1/4)) + 
+  geom_point(color='blue')+ geom_smooth(method=lm) + 
+  facet_wrap(~quality_cat) + ylim(8,13)+ scale_alpha(guide='none')
+```
+
+Though alcohol and volatile acidity are inversely related but when looked with quality as a factor, the relation is not the same for all kinds of quality. It seems for medium quality wines, alcohol is inversely relateded to volatile acidity but not for high and low quality wones indicating a non-linear overall relationship with quality perhaps. Given the low correlation coefficients of each of these factors, I have not made a regression model for this project. Now, let us look at the same relationship but at a different perspective
+
+```{r echo=FALSE}
+ggplot(dat, aes(x=volatile.acidity, y=alcohol, color=quality_cat, alpha=1/4)) + 
+  geom_point()+ geom_smooth(method=lm)+ scale_alpha(guide='none')
+```
+
+
+```{r echo=FALSE, warning= FALSE}
+ggplot(dat, aes(x=volatile.acidity, y=citric.acid, color=quality_cat, alpha=1/4)) + 
+  geom_point()+ geom_smooth(method=lm)+xlim(0.1,1)+ scale_alpha(guide='none')
+```
+
+Citric acid and volatile acidity are still inversely related for different kinds of quality but the slope of inverse relaionship increases as quality increases implying that for each unit change in volatile acidity, citric acid has to change more fast for a high quality fast and in the opposite direction. 
+
+```{r echo=FALSE, warning=FALSE}
+ggplot(dat, aes(x=density, y=alcohol, color=quality_cat, alpha=1/4)) + 
+  geom_point()+ geom_smooth(method=lm) + ylim(8,14) + 
+  scale_alpha(guide='none')
+```
+
+This plot is also very interesting. Alcohol and density are inversely related. This is obvious even through basic chemical engineering knowledge. Alcohol is less dense than water so if alcohol content reduces, density will increase. A more interesting aspect is that quality has almost parallel lines for alcohol with density which indicates that density does not have any big role to play in this relationship and alcohol alone can help predict wine quality.
+
+
+# Final Plots and Summary
+
+
+### Plot One : Impact of Alcohol on Quality
+```{r echo=FALSE, Plot_One}
+#hjust helps to justify the title to the middle, values 1 and 0 are for right and left respectively
+ggplot(dat, aes(x=quality_cat, y=alcohol)) + 
+  geom_boxplot(color='black', alpha=1) + 
+  geom_jitter(alpha = 1/5, color='blue')+ 
+  ggtitle('How does quality get impacted with alcohol') + 
+  xlab('Quality of Red Wine')+ ylab('alcohol % vol')+ 
+  theme(plot.title = element_text(hjust=0.5))
+```
+
+### Looking at the plot above, we know that alcohol is positively correlated with quality of wine, thought he relationship is not very strong. The values for medium quality wine are all over and we are just looking at the median when we talk about this positive corrleation. Thus, the relationship is not very strong. 
+
+### Plot Two:  Impact of Volatile Acidity on quality
+```{r echo=FALSE, Plot_Two}
+#hjust helps to justify the title to the middle, values 1 and 0 are for right and left respectively
+ggplot(dat, aes(x=quality_cat, y=volatile.acidity)) + 
+  geom_boxplot(color='black', alpha=1) + 
+  geom_jitter(alpha = 1/5, color='blue')+ 
+  coord_cartesian(ylim = c(0.2, 1.2)) +
+  ggtitle('How does quality get impacted with volatile acidity') + 
+  xlab('Quality of Red Wine')+ ylab('Volatile Acidity g/dm^3')+ 
+  theme(plot.title = element_text(hjust=0.5))
+```
+
+### This graph confirms the inverse relationship between quality and volatile acidity, even though not a strong one because the values of medium quality wines are spread all over and the relationship is more for medium or mean value rather than a very strong relationship. Next, let us look at how quality is related to volaile acidity and alcohol content together.
+
+ 
+### Plot Three:  Impact of both alcohol and volatile acidity on quality
+```{r echo=FALSE,warning=FALSE, Plot_Three}
+# labs() changes the title of legend 
+ggplot(dat, aes(x=volatile.acidity, y=alcohol, color=quality_cat, alpha=1/4)) + 
+  geom_point()+ geom_smooth(method=lm) + 
+  ggtitle('How does quality get impacted with volatile acidity and alcohol together')+
+  xlab('Volatile Acidity g/dm^3')+ ylab('Alcohol % by vol')+ 
+  labs(color = "Quality of Wine") + theme(plot.title = element_text(hjust=0.5))+
+  scale_alpha(guide='none')
+```
+
+### Though alcohol and volatile acidity are slightly inversely related but when looked with quality as a factor, the relation is not the same for all kinds of quality. It seems for medium quality wines, alcohol is inversely relateded to volatile acidity but not for high and low quality wones indicating a non-linear overall relationship with quality perhaps. Given the low correlation coefficients of each of these factors, I have not made a regression model for this project. Now, let us look at the same relationship but at a different perspective
+
+------
+
+# Reflection
+### The red wine quality data was explored. There were a large number of variables in the datset and the objective was to understand what chemical properties influence the quality of wine. Important points from the analysis include:
+###1. Correlation Plot helped us understand that quality was not highly correlated to any specific chemical property.
+###2. There was a weak correlation between quality and alcohol, quality and volatile acidity.
+###3. Since the correlation coefficients with quality of any of the variables were all very low, I decided to not go ahead with developing a regression model and instead focus on how the relationship looks in a big picure. 
+###4. Even though data suggests that alcohol and volatile acidity are slightly inversely related but when looked with quality as a factor, the relation is not the same for all kinds of quality. It seems for medium quality wines, alcohol is inversely relateded to volatile acidity but not for high and low quality wones indicating a non-linear overall relationship with quality perhaps. Given the low correlation coefficients of each of these factors, I have not made a regression model for this project. Now, let us look at the same relationship but at a different perspective
+###5.  Data suggests that Citric acid and volatile acidity were inversely related for different kinds of quality but the slope of inverse relaionship increases as quality increases implying that for each unit change in volatile acidity, citric acid has to change more fast for a high quality fast and in the opposite direction.
+###6. Future work on this dataset could include working on getting more data. Currently, dataset had more medium quality wines which might have hindered full analysis. We could also try understanding the quality rating more since as per the source of the dataset, this rating was obtained by sensory data of 3 wine experts. I believe wine is a very personal thing and giving it a score of 1 to 10 in itself makes very less sense since it will depend very much on your own tastes.

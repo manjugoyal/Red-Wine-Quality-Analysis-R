@@ -1,0 +1,2 @@
+*.html linguist-vendored
+# file to ensure github does not pick html as language as work done in R
